@@ -1,12 +1,17 @@
 /*
 dependencies:
+    - pvt.cppan.demo.qtproject.qt.base.gui
+    - pvt.cppan.demo.qtproject.qt.base.widgets
     - pvt.cppan.demo.intel.opencv.core: 3
     - pvt.cppan.demo.intel.opencv.contrib.text: 3
     - pvt.cppan.demo.intel.opencv.highgui: 3
     - pvt.cppan.demo.intel.opencv.features2d: 3
     - pvt.cppan.demo.intel.opencv.videoio: 3
-	- pvt.cppan.demo.qtproject.qt.base.gui: 5.9.1
+	
 */
+
+#include <iostream>
+#include <numeric>
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -15,10 +20,14 @@ dependencies:
 #include <opencv2/features2d.hpp>
 #include <opencv2/videoio.hpp>
 
+#include <qguiapplication.h>
+#include <qapplication.h>
+#include <qdesktopservices.h>
+#include <qurl.h>
+#include <qwindow.h>
 
-
-#include <iostream>
-#include <numeric>
+#include <Windows.h>
+#include <shellapi.h>
 
 using namespace cv;
 using namespace cv::text;
@@ -28,10 +37,9 @@ void er_draw(vector<Mat> &channels, vector<vector<ERStat> > &regions, vector<Vec
 bool isRepetitive(const string& s);
 
 void CallBackFunc(int event, int x, int y, int flags, void* userdata) {
-	// When the user clicks on the screen, this function will take a picture an change it to gray scale.
+	// When the user clicks on the screen, this function will take a picture , recognize the text and google said text.
 
 	if (event == EVENT_LBUTTONDOWN) {
-		namedWindow("Result", WINDOW_AUTOSIZE);
 
 		UMat* frame = (UMat*)userdata;
 
@@ -89,6 +97,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata) {
 		float scale_img = 600.f / frame->rows;
 		float scale_font = (float)(2 - scale_img) / 1.4f;
 		vector<string> words_detection;
+		string toGoogle;
 
 		for (int i = 0; i<(int)nm_boxes.size(); i++)
 		{
@@ -130,11 +139,16 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata) {
 				out_img_segmentation = out_img_segmentation | group_segmentation;
 			}
 			
-			string toGoogle;
+			
 			toGoogle = accumulate(begin(words), end(words), toGoogle);
-			cout << toGoogle << endl;
 
 		}
+
+		// Search recognized text in google
+		toGoogle = "www.google.com/search?site=&source=hp&q=" + toGoogle;
+
+		ShellExecute(NULL, "open", toGoogle.c_str(),
+			NULL, NULL, SW_SHOWNORMAL);
 
 	}
 
@@ -142,9 +156,15 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata) {
 	
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	namedWindow("start", WINDOW_AUTOSIZE);
+
+	//QApplication app(argc,argv);
+	//QString link = "http://www.google.com";
+	//QUrl url(link);
+
+	//QDesktopServices::openUrl(url);
 
 	// This is where the video capture will go.
 	UMat bgr_frame;
